@@ -22,16 +22,20 @@ app.use(express.static(publicDirectoryPath))
 io.on('connection', (socket) => {
     console.log('New WebSocket Connection');
 
-    socket.emit('Messages',generateMessage('Welcome!'));
-    socket.broadcast.emit('Messages',generateMessage('A new user has joined!'));
+    socket.on('join',({username,room})=>{
+        socket.join(room)
+
+        socket.emit('Messages',generateMessage('Welcome!'));
+        socket.broadcast.to(room).emit('Messages',generateMessage(`${username} has joined!`));
+    })
 
     socket.on('newMessage',(message,callback)=>{
-const filter =  new Filter()
-if(filter.isProfane(message)){
-    return callback('Profanity is not allowed')
+        const filter =  new Filter()
+        if(filter.isProfane(message)){
+            return callback('Profanity is not allowed')
 }
 
-        io.emit('Messages',generateMessage(message))
+        io.to('south').emit('Messages',generateMessage(message))
         callback()
     })
     socket.on('sendLocation',(coords,callback)=>{
